@@ -1,0 +1,6 @@
+image: ami-153d3b7f
+type: t2.micro
+key: cs-talita
+sg_id: sg-675f7015
+subnet: subnet-95b8a1b8
+region: us-east-1

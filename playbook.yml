@@ -1,0 +1,83 @@
+- hosts: localhost
+  vars_files:
+    - var.yml
+  
+  tasks: 
+    - name: AWS | Create SG
+      ec2_group:
+        name: ansible
+        description: ansible sg
+        state: present
+        vpc_id: vpc-52556f34
+        rules:
+          - proto: tcp
+            ports:
+              - 8080
+              - 22
+              - 50000
+            cidr_ip: 0.0.0.0/0
+      register: sg
+
+    - name: AWS | Launch instance
+      ec2:
+        key_name: "{{ key }}"
+        image: "{{ image }}"
+        wait: yes
+        type: "{{ type }}"
+        count: 1
+        group_id: "{{ sg.group_id }}"
+        vpc_subnet_id: "{{ subnet }}"
+        assign_public_ip: yes
+        region: "{{ region }}"
+        instance_tags:
+          Name: "EC2-Ansible-Talita"
+        volumes:
+        - device_name: /dev/sda1        
+          volume_size: 30
+          delete_on_termination: true      
+      register: machine
+      
+
+    - name: AWS | Add instance for host
+      add_host:
+        hostname: "{{ item.public_ip }}"
+        groupname: docker
+        ec2_id: "{{ item.id }}"
+      with_items: "{{ machine.instances }}"
+    
+    - name: AWS | Service ssh up
+      wait_for:
+        host: "{{ item.public_ip }}"
+        port: 22
+        timeout: 600
+        state: started
+      with_items: "{{ machine.instances }}"
+
+    - name: Install python2 for Ansible
+      host: "{{ item.public_ip }}"
+      raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
+      register: output
+      changed_when: output.stdout != ""
+      with_items: "{{ machine.instances }}"
+    
+    - name: AWS | Attach volume
+      ec2_vol:
+        name: Devopinhos
+        device_name: /dev/sdf
+        volume_type: gp2
+        delete_on_termination: no
+        instance: "{{ item.id }}"
+        volume_size: 8
+        region: "{{ region }}"
+      with_items: "{{ machine.instances }}"
+      register: vol
+
+    
+
+- name: AWS | Provision  instance
+  hosts: docker
+  become: True
+  gather_facts: True
+  roles:
+    - ansible-role-install-docker
+    
