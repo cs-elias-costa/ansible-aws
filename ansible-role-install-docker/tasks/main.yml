@@ -51,18 +51,22 @@
     name: docker-py
     version: 1.10.6
 
-- name: Docker | Mount ebs 
-  command: mount /dev/xvdf /opt/
+- name:  APP | Set ext4
+  command: mkfs -t ext4 /dev/xvdf
 
 - name: Docker | Share volumes
   file:
-    path: /opt/jenkins
+    path: /mnt/app
     state: directory
     mode: 0777
+    recurse: yes
 
-- name:  Docker | Set ext4
-  command: mkfs -t ext4 /dev/xvdf
-
+- name: APP | Mount device
+  mount:
+    path: /mnt/app
+    src: /dev/xvdf
+    fstype: ext4
+    state: mounted
 
 - name: Docker | Start Jenkins Container
   docker_container:
@@ -74,7 +78,7 @@
     - "8080:8080"
     - "50000:50000"
     volumes:
-    - /opt/jenkins:/var/jenkins_home
+    - /mnt/app:/var/jenkins_home
 
 
 
