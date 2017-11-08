@@ -53,6 +53,8 @@
 
 - name:  APP | Set ext4
   command: mkfs -t ext4 /dev/xvdf
+  tags:
+    - emptyvol
 
 - name: Docker | Share volumes
   file:
