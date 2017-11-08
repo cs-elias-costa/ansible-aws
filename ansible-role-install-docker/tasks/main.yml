@@ -58,9 +58,7 @@
   file:
     path: /mnt/app
     state: directory
-    mode: 0777
-    recurse: yes
-
+    
 - name: APP | Mount device
   mount:
     path: /mnt/app
@@ -68,6 +66,12 @@
     fstype: ext4
     state: mounted
 
+- name: APP | Add permission for jenkins volume
+  file:
+    path: /mnt/app
+    state: directory
+    mode: 0777
+  
 - name: Docker | Start Jenkins Container
   docker_container:
     name: jenkins
@@ -79,8 +83,3 @@
     - "50000:50000"
     volumes:
     - /mnt/app:/var/jenkins_home
-
-
-
-
-
