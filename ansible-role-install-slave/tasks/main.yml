@@ -1,0 +1,8 @@
+---
+# tasks file for ansible-role-ec2-create
+
+- name: Install slave jenkins
+  become: yes
+  command: /mnt/app/jenkinsslave/install.sh
+
+
