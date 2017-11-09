@@ -1,20 +1,22 @@
 - hosts: localhost
   vars_files:
     - var.yml
-  
+
   tasks: 
     - name: AWS | Create SG
       ec2_group:
         name: ansible
         description: ansible sg
         state: present
-        vpc_id: vpc-52556f34
+        vpc_id: vpc-02619967
         rules:
           - proto: tcp
             ports:
               - 8080
               - 22
               - 50000
+              - 80
+              - 81
             cidr_ip: 0.0.0.0/0
       register: sg
 
@@ -30,10 +32,10 @@
         assign_public_ip: yes
         region: "{{ region }}"
         instance_tags:
-          Name: "EC2-Ansible-Devopinhos"
+          Name: "EC2-Ansible-DevOpinhos"
         volumes:
         - device_name: /dev/sda1        
-          volume_size: 30
+          volume_size: 15
           delete_on_termination: true      
       register: machine
       
@@ -43,8 +45,8 @@
         hostname: "{{ item.public_ip }}"
         groupname: docker
         ec2_id: "{{ item.id }}"
-      with_items: "{{ machine.instances }}"
-    
+      with_items: "{{ machine.instances }}"      
+  
     - name: AWS | Service ssh up
       wait_for:
         host: "{{ item.public_ip }}"
@@ -52,17 +54,10 @@
         timeout: 600
         state: started
       with_items: "{{ machine.instances }}"
-
-    - name: Install python2 for Ansible
-      host: "{{ item.public_ip }}"
-      raw: bash -c "test -e /usr/bin/python || (apt -qqy update && apt install -qqy python-minimal)"
-      register: output
-      changed_when: output.stdout != ""
-      with_items: "{{ machine.instances }}"
     
     - name: AWS | Attach volume
       ec2_vol:
-        name: Devopinhos
+        name: devopinhos
         device_name: /dev/sdf
         volume_type: gp2
         delete_on_termination: no
@@ -71,7 +66,11 @@
         region: "{{ region }}"
       with_items: "{{ machine.instances }}"
       register: vol
-
+  
+    - name: Installing python
+      hosts: "{{ item.public_ip }}"
+      raw: test -e /usr/bin/python || (sudo apt -y update && sudo apt install -y python-minimal)
+      with_items: "{{ machine.instances }}"
     
 
 - name: AWS | Provision  instance
