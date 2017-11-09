@@ -1,0 +1,22 @@
+galaxy_info:
+  author: Talita Bernardes Pereira
+  description: It's a role for create EC2 with docker and jenkins container
+  company: Concrete - concrete.com.br
+
+ 
+  license: license (GPLv2, CC-BY, etc)
+
+  min_ansible_version: 2.2
+  
+  platforms:
+  - name: Ubuntu 
+
+  galaxy_tags:
+    - ubuntu
+    - ec2
+    - docker
+    - jenkins
+    
+dependencies: []
+
+

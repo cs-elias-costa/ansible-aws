@@ -4,7 +4,7 @@
   apt:
     update_cache: yes
 
-- name: Ubuntu | Install dependencies
+- name: Docker | Install dependencies
   apt:
     name: "{{ item }}"
     state: present
@@ -16,7 +16,7 @@
     - software-properties-common
     - python-pip
 
-- name: Ubuntu | Install python modules 
+- name: Docker | Install python modules 
   pip:
     name: "{{item}}"
     state: present
@@ -26,41 +26,49 @@
     - ndg-httpsclient
     - pyasn1
 
-- name: Ubuntu | Add docker key
+- name: Docker| Add docker key
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
   become: true
   id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
 
-- name: Ubuntu | Add Repo
+- name: Docker | Add Repo
   apt_repository:
     repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
     state: present
   become: true
 
-- name: Ubuntu | Install Docker
+- name: Docker | Install Docker
   apt:
-    name: docker-ce
+    name: "{{ item }}"
     state: present
     update_cache: yes
-  become: true
+  with_items:
+  - docker-ce
+  
+- name: Docker | Install docker-compose
+  get_url: 
+    url : https://github.com/docker/compose/releases/download/1.7.0-rc1/docker-compose-{{ ansible_system }}-{{ ansible_userspace_architecture }}
+    dest: /usr/local/bin/docker-compose
+    mode: 0777
 
-- name: Ubuntu | Install docker-python modules 
+- name: Docker | Install docker-python modules 
   pip:
     name: docker-py
     version: 1.10.6
 
 - name:  APP | Set ext4
   command: mkfs -t ext4 /dev/xvdf
-  tags:
-    - emptyvol
+  tags: empty
+
 
 - name: Docker | Share volumes
   file:
     path: /mnt/app
     state: directory
     
+
 - name: APP | Mount device
   mount:
     path: /mnt/app
@@ -72,8 +80,8 @@
   file:
     path: /mnt/app
     state: directory
-    mode: 0777
-  
+    mode: 0777  
+
 - name: Docker | Start Jenkins Container
   docker_container:
     name: jenkins
@@ -85,3 +93,29 @@
     - "50000:50000"
     volumes:
     - /mnt/app:/var/jenkins_home
+
+- name: Jenkins | Add  Java Repo
+  become: yes
+  apt_repository: repo='ppa:webupd8team/java'
+
+- name: Jenkins | Accept License
+  become: yes
+  debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+
+- name: Jenkins |  Install Java8
+  become: yes
+  apt: name={{item}} state=latest
+  with_items:
+    - oracle-java8-installer
+    - ca-certificates
+    - oracle-java8-set-default
+  
+  
+
+
+
+
+
+
+
+
