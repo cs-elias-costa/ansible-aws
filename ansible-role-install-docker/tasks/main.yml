@@ -4,111 +4,30 @@
   apt:
     update_cache: yes
 
-- name: Docker | Install dependencies
-  apt:
-    name: "{{ item }}"
-    state: present
-  with_items:
-    - apt-transport-https
-    - ca-certificates
-    - curl
-    - gnupg2
-    - software-properties-common
-    - python-pip
+- name: Docker | Set docker config
+  include: docker.yml
 
-- name: Docker | Install python modules 
-  pip:
-    name: "{{item}}"
-    state: present
-  with_items:
-    - urllib3
-    - pyOpenSSL
-    - ndg-httpsclient
-    - pyasn1
-
-- name: Docker| Add docker key
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-  become: true
-  id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-
-- name: Docker | Add Repo
-  apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-    state: present
-  become: true
-
-- name: Docker | Install Docker
-  apt:
-    name: "{{ item }}"
-    state: present
-    update_cache: yes
-  with_items:
-  - docker-ce
-  
-- name: Docker | Install docker-compose
-  get_url: 
-    url : https://github.com/docker/compose/releases/download/1.7.0-rc1/docker-compose-{{ ansible_system }}-{{ ansible_userspace_architecture }}
-    dest: /usr/local/bin/docker-compose
-    mode: 0777
-
-- name: Docker | Install docker-python modules 
-  pip:
-    name: docker-py
-    version: 1.10.6
-
-- name:  APP | Set ext4
+- name:   Ubuntu | Set ext4
   command: mkfs -t ext4 /dev/xvdf
   tags: empty
 
-
-- name: Docker | Share volumes
+- name: Ubuntu | Create directory for shared volumes
   file:
     path: /mnt/app
-    state: directory
-    
+    state: directory    
 
-- name: APP | Mount device
-  mount:
-    path: /mnt/app
-    src: /dev/xvdf
-    fstype: ext4
-    state: mounted
+- name: Ubuntu | Mount device
+  command: mount /dev/xvdf /mnt/app -t ext4
+  ignore_errors: yes    
 
-- name: APP | Add permission for jenkins volume
+- name: Ubuntu | Add permission for jenkins volume
   file:
     path: /mnt/app
     state: directory
     mode: 0777  
 
-- name: Docker | Start Jenkins Container
-  docker_container:
-    name: jenkins
-    image: jenkins/jenkins
-    pull: true
-    state: started
-    ports:
-    - "8080:8080"
-    - "50000:50000"
-    volumes:
-    - /mnt/app:/var/jenkins_home
-
-- name: Jenkins | Add  Java Repo
-  become: yes
-  apt_repository: repo='ppa:webupd8team/java'
-
-- name: Jenkins | Accept License
-  become: yes
-  debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
-
-- name: Jenkins |  Install Java8
-  become: yes
-  apt: name={{item}} state=latest
-  with_items:
-    - oracle-java8-installer
-    - ca-certificates
-    - oracle-java8-set-default
+- name: Jenkins | Set jenkins config
+  include: jenkins.yml
   
   
 

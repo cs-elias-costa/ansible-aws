@@ -58,7 +58,7 @@
     
     - name: AWS | Attach volume
       ec2_vol:
-        name: devopinhos
+        name: "{{ ebs }}"
         device_name: /dev/sdf
         volume_type: gp2
         delete_on_termination: no
