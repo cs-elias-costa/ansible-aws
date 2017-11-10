@@ -3,3 +3,7 @@ type: t2.small
 key: cs-talita
 subnet: subnet-5cedb174
 region: us-east-1
+ebs: Devopinhos_Dev
+elastic_ip: 34.206.236.196
+instance_name: Devopinhos_Dev
+security_group_name: Devopinhos-Dev
