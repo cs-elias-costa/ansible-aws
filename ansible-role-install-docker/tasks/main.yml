@@ -20,9 +20,7 @@
 
 - name: Ubuntu | Mount device
   command: mount /dev/xvdf /mnt/app -t ext4
-  ignore_errors: yes
-
-    
+  ignore_errors: yes    
 
 - name: Ubuntu | Add permission for jenkins volume
   file:
