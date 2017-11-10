@@ -7,7 +7,6 @@
 - name: Docker | Set docker config
   include: docker.yml
 
-
 - name:   Ubuntu | Set ext4
   command: mkfs -t ext4 /dev/xvdf
   tags: empty
@@ -15,8 +14,7 @@
 - name: Ubuntu | Create directory for shared volumes
   file:
     path: /mnt/app
-    state: directory
-    
+    state: directory    
 
 - name: Ubuntu | Mount device
   command: mount /dev/xvdf /mnt/app -t ext4
