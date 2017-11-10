@@ -73,6 +73,7 @@
       add_host:
         hostname: "{{ elastic_ip }}"
         groupname: docker
+    
 
 - name: AWS | Provision  instance
   hosts: docker
