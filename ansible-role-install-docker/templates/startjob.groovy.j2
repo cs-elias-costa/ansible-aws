@@ -1,0 +1,6 @@
+import jenkins.model.Jenkins
+
+def job1 = Jenkins.instance.getItem(“app-node”)
+def job2 = Jenkins.instance.getItem(“app-php“)
+Jenkins.instance.queue.schedule(job1)
+Jenkins.instance.queue.schedule(job2)
