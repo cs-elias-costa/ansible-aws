@@ -1,7 +1,7 @@
 Role Install Docker and Jenkins container
 =========
 
-This role install docker in Ubuntu with Jenkins
+This role install docker in Ubuntu with Jenkins in container on AWS ec2 with persistence in EBS
 
 Requirements
 ------------
