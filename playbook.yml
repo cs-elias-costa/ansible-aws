@@ -12,7 +12,6 @@
         rules:
           - proto: tcp
             ports:
-              - 8080
               - 22
               - 80
             cidr_ip: 0.0.0.0/0

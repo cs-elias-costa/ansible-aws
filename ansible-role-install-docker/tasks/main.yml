@@ -5,7 +5,7 @@
     update_cache: yes
 
 - name: Docker | Set docker config
-  include: docker.yml
+  include_tasks: docker.yml
 
 - name:   Ubuntu | Set ext4
   command: mkfs -t ext4 /dev/xvdf
@@ -26,8 +26,14 @@
     state: directory
     mode: 0777  
 
+- name: Ubuntu | Add user in sudoers
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    line: 'ubuntu  ALL=(ALL) NOPASSWD: ALL'
+
 - name: Jenkins | Set jenkins config
-  include: jenkins.yml
+  include_tasks: jenkins.yml
   
   
 
