@@ -6,8 +6,8 @@ This role install docker in Ubuntu with Jenkins
 Requirements
 ------------
 
-Boto
-Python >=2.6
+- Boto
+- Python >=2.6
 
 Role Variables
 --------------
