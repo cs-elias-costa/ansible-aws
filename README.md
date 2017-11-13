@@ -40,7 +40,7 @@
       - Install java
       
   For execute without formating disk use 
-  `ansible-playbook -u usuario --private-key chave --skip-tags playbook.yml`
+  `ansible-playbook -i ip/filehosts, -u usuario --private-key chave --skip-tags empty playbook.yml`
 
 ---
 
