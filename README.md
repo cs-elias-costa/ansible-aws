@@ -38,6 +38,9 @@
 
       - Deploy jenkins in container 
       - Install java
+      
+  For execute without formating disk use 
+  `ansible-playbook -u usuario --private-key chave --skip-tags playbook.yml`
 
 ---
 
