@@ -5,7 +5,7 @@
     update_cache: yes
 
 - name: Docker | Set docker config
-  include_tasks: docker.yml
+  import_tasks: docker.yml
 
 - name:   Ubuntu | Set ext4
   command: mkfs -t ext4 /dev/xvdf
@@ -33,7 +33,7 @@
     line: 'ubuntu  ALL=(ALL) NOPASSWD: ALL'
 
 - name: Jenkins | Set jenkins config
-  include_tasks: jenkins.yml
+  import_tasks: jenkins.yml
   
   
 
