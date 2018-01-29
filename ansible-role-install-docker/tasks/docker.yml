@@ -1,53 +1,24 @@
-- name: Docker | Install dependencies
-  apt:
-    name: "{{ item }}"
-    state: present
-  with_items:
-    - apt-transport-https
-    - ca-certificates
-    - curl
-    - gnupg2
-    - software-properties-common
-    - python-pip
+  - name: "Outro"
+    command: yum-config-manager --enable rhel-7-server-extras-rpms
+  - name: "Yum repo"
+    command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 
-- name: Docker | Install python modules 
-  pip:
-    name: "{{item}}"
-    state: present
-  with_items:
-    - urllib3
-    - pyOpenSSL
-    - ndg-httpsclient
-    - pyasn1
+  - name: "makecache"
+    command: yum makecache fast
 
-- name: Docker| Add docker key
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-  become: true
-  id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-
-- name: Docker | Add Repo
-  apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-    state: present
-  become: true
-
-- name: Docker | Install Docker
-  apt:
-    name: "{{ item }}"
-    state: present
-    update_cache: yes
-  with_items:
-  - docker-ce
+  - name: ""
+    
+  - name: Docker | Install dependencies
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - docker-ce
   
-- name: Docker | Install docker-compose
-  get_url: 
-    url : https://github.com/docker/compose/releases/download/1.7.0-rc1/docker-compose-{{ ansible_system }}-{{ ansible_userspace_architecture }}
-    dest: /usr/local/bin/docker-compose
-    mode: 0777
 
-- name: Docker | Install docker-python modules 
-  pip:
-    name: docker-py
-    version: 1.10.6
+  - service:
+    name: docker
+    state: started

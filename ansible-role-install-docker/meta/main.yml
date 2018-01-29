@@ -9,14 +9,13 @@ galaxy_info:
   min_ansible_version: 2.2
   
   platforms:
-  - name: Ubuntu 
+  - name: RedHat 
 
   galaxy_tags:
-    - ubuntu
     - ec2
     - docker
     - jenkins
-    
+
 dependencies: []
 
 

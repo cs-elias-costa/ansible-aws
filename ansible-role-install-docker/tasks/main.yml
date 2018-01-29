@@ -1,39 +1,9 @@
 ---
 # tasks file for ansible-role-ec2-create
-- name: Ubuntu | Update packages
-  apt:
-    update_cache: yes
 
 - name: Docker | Set docker config
   import_tasks: docker.yml
 
-- name:   Ubuntu | Set ext4
-  command: mkfs -t ext4 /dev/xvdf
-  tags: empty
-
-- name: Ubuntu | Create directory for shared volumes
-  file:
-    path: /mnt/app
-    state: directory    
-
-- name: Ubuntu | Mount device
-  command: mount /dev/xvdf /mnt/app -t ext4
-  ignore_errors: yes    
-
-- name: Ubuntu | Add permission for jenkins volume
-  file:
-    path: /mnt/app
-    state: directory
-    mode: 0777  
-
-- name: Ubuntu | Add user in sudoers
-  lineinfile:
-    dest: /etc/sudoers
-    state: present
-    line: 'ubuntu  ALL=(ALL) NOPASSWD: ALL'
-
-- name: Jenkins | Set jenkins config
-  import_tasks: jenkins.yml
   
   
 

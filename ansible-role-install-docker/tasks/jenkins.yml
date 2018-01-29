@@ -21,7 +21,7 @@
 
 - name: Jenkins |  Install Java8
   become: yes
-  apt: name={{item}} state=latest
+  yum: name={{item}} state=latest
   with_items:
     - oracle-java8-installer
     - ca-certificates

@@ -1,0 +1,162 @@
+- hosts: localhost
+  vars_files:
+    - var.yml
+
+  tasks: 
+    - name: "Create VPC"
+      ec2_vpc_net:
+        name: vpc_ecosta
+        cidr_block: 10.22.0.0/16
+        region: us-east-2
+        tags:
+          name: vpc_ecosta
+      register: vpc
+
+    - name: Create subnet for Web
+      ec2_vpc_subnet:
+        az: us-east-2a
+        state: present
+        vpc_id: "{{ vpc.vpc.id }}"
+        cidr: 10.22.1.0/24
+        map_public: true
+        resource_tags:
+          Name: Web
+      register: subnet_web
+
+    - name: Create subnet for App
+      ec2_vpc_subnet:
+        az: us-east-2c
+        state: present
+        vpc_id: "{{ vpc.vpc.id }}"
+        cidr: 10.22.2.0/24
+        map_public: false
+        resource_tags:
+          Name: App
+      register: subnet_app  
+
+    - name: "IGW"
+      ec2_vpc_igw:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: us-east-2
+        state: present
+      register: igw 
+
+    - name: "Nat Gateway"
+      ec2_vpc_nat_gateway:
+        state: present
+        subnet_id: "{{ subnet_web.subnet.id }}"
+        wait: yes
+        region: us-east-2
+        if_exist_do_not_create: true
+      register: nat_gateway       
+     
+    - name: "Set up public subnet route table"
+      ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: us-east-2
+        tags:
+          Name: PublicRouteEcosta
+        subnets:
+          - "{{ subnet_web.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw.gateway_id }}"
+      register: public_route_table
+
+    - name: Set up NAT-protected route table
+      ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: us-east-2
+        tags:
+          Name: Internal
+        subnets:
+          - "{{ subnet_app.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ nat_gateway.nat_gateway_id }}"
+      register: nat_route_table
+
+  
+    - name: AWS | Create SG
+      ec2_group:
+        name: "{{ security_group_name }}"
+        description: "{{ security_group_name }}"
+        state: present
+        vpc_id: "{{vpc.vpc.id}}"
+        rules:
+          - proto: tcp
+            ports:
+              - 22
+              - 80
+            cidr_ip: 0.0.0.0/0
+      register: sg
+
+    - name: AWS | Launch instance
+      ec2:
+        key_name: "{{ key }}"
+        image: "{{ image }}"
+        wait: yes
+        type: "{{ type }}"
+        count: 1
+        id: "WEB001"
+        group_id: "{{ sg.group_id }}"
+        vpc_subnet_id: "{{ subnet_web.subnet.id }}"
+        assign_public_ip: yes
+        region: "{{ region }}"
+        instance_tags:
+          Name: "{{ instance_name }}"
+        volumes:
+        - device_name: /dev/xvda        
+          device_type: gp2
+          volume_size: 15
+          delete_on_termination: true  
+        state: present 
+      register: machine   
+  
+    - name: AWS | Service ssh up
+      wait_for:
+        host: "{{ item.public_ip }}"
+        port: 22
+        timeout: 600
+        state: started
+      with_items: "{{ machine.instances }}"
+    
+    - name: AWS | Attach volume
+      ec2_vol:
+        name: "{{ ebs }}"
+        device_name: /dev/sdf
+        volume_type: gp2
+        delete_on_termination: no
+        instance: "{{ item.id }}"
+        volume_size: 8
+        region: "{{ region }}"
+      with_items: "{{ machine.instances }}"
+      register: vol
+
+    # - name: Associate an elastic IP with an instance
+    #   ec2_eip:
+    #     device_id: "{{ item.id }}"
+    #     # ip: "{{ elastic_ip }}"
+    #     in_vpc: yes
+    #     reuse_existing_ip_allowed: yes
+    #     region: "{{ region }}"
+    #   with_items: "{{ machine.instances }}"
+      
+    - name: AWS | Add instance for host
+      add_host:
+        hostname: "{{ item.public_ip }}"
+        groupname: docker
+      with_items: "{{ machine.instances }}"
+
+
+
+- name: AWS | Provision  instance
+  hosts: docker
+  become: True
+  remote_user: ec2-user
+  vars:
+    ansible_private_key_file: "~/Downloads/ecosta_devops.pem-2.txt"
+  gather_facts: True
+  roles:
+    - ansible-role-install-docker
+    
